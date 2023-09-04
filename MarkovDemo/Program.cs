@@ -1,27 +1,17 @@
-﻿using System;
-using System.IO;
+﻿namespace MarkovDemo;
 
-namespace MarkovDemo
+class Program
 {
-    class Program
+    static void Main(string[] args)
     {
-        static void Main(string[] args)
+        var markovDic = new MarkovDictionary();
+
+        markovDic.AddSentence("今日", "の", "天気", "は", "晴れ", "です。");
+        markovDic.AddSentence("明日", "の", "天気", "は", "雨", "です。");
+
+        for (var i = 0; i < 10; i++)
         {
-            var lines = File.ReadAllLines(@"C:\Users\shibayan\Documents\mecab\statemachine_data.txt");
-
-            var markovDic = new MarkovDictionary();
-
-            foreach (var line in lines)
-            {
-                markovDic.AddSentence(line.Split('|'));
-            }
-
-            for (int i = 0; i < 100; i++)
-            {
-                var sentence = markovDic.BuildSentence();
-
-                Console.WriteLine(string.Join("", sentence));
-            }
+            Console.WriteLine(string.Join(" / ", markovDic.BuildSentence()));
         }
     }
 }

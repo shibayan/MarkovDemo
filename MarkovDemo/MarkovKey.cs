@@ -1,69 +1,48 @@
-﻿using System;
-using System.Linq;
+﻿namespace MarkovDemo;
 
-namespace MarkovDemo
+public readonly struct MarkovKey : IEquatable<MarkovKey>
 {
-    public sealed class MarkovKey : IEquatable<MarkovKey>
+    public MarkovKey()
     {
-        public MarkovKey()
-        {
-            _keys = new string[N];
-        }
-
-        private MarkovKey(params string[] keys)
-        {
-            _keys = keys;
-        }
-
-        private const int N = 2;
-        private const string DefaultKeySeparator = ":";
-
-        private readonly string[] _keys;
-
-        public MarkovKey Push(string key)
-        {
-            var newKeys = new string[N];
-
-            newKeys[0] = key;
-
-            for (int i = 0; i < N - 1; i++)
-            {
-                newKeys[i + 1] = _keys[i];
-            }
-
-            return new MarkovKey(newKeys);
-        }
-
-        public override int GetHashCode()
-        {
-            return _keys.Aggregate(int.MaxValue, (current, t) => current ^ (t ?? "").GetHashCode());
-        }
-
-        public override string ToString()
-        {
-            return string.Join(DefaultKeySeparator, _keys);
-        }
-
-        public override bool Equals(object obj)
-        {
-            var key = obj as MarkovKey;
-
-            if (key == null)
-            {
-                return false;
-            }
-
-            return Equals(key);
-        }
-
-        public bool Equals(MarkovKey other)
-        {
-            if (_keys.Length != other._keys.Length)
-            {
-                return false;
-            }
-
-            return !_keys.Where((t, i) => t != other._keys[i]).Any();
-        }
+        _keys = s_emptyKeys;
     }
+
+    private MarkovKey(params string[] keys)
+    {
+        _keys = keys;
+    }
+
+    private const int ReferenceKeySize = 2;
+    private const string DefaultKeySeparator = ":";
+
+    private readonly IReadOnlyList<string> _keys;
+
+    private static readonly int s_globalRandomSeed = Random.Shared.Next(0, int.MaxValue);
+    private static readonly IReadOnlyList<string> s_emptyKeys = Enumerable.Repeat("", ReferenceKeySize).ToArray();
+
+    public MarkovKey Push(string key)
+    {
+        var newKeys = new string[ReferenceKeySize];
+
+        newKeys[0] = key;
+
+        for (var i = 0; i < ReferenceKeySize - 1; i++)
+        {
+            newKeys[i + 1] = _keys[i];
+        }
+
+        return new MarkovKey(newKeys);
+    }
+
+    public override int GetHashCode() => _keys.Aggregate(s_globalRandomSeed, (current, key) => current ^ key.GetHashCode());
+
+    public override string ToString() => string.Join(DefaultKeySeparator, _keys);
+
+    public override bool Equals(object? obj) => Equals((MarkovKey)obj);
+
+    public bool Equals(MarkovKey other) => _keys.SequenceEqual(other._keys);
+
+    public static bool operator ==(MarkovKey left, MarkovKey right) => left.Equals(right);
+
+    public static bool operator !=(MarkovKey left, MarkovKey right) => !(left == right);
 }

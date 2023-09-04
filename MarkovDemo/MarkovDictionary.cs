@@ -1,65 +1,55 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 
-namespace MarkovDemo
+namespace MarkovDemo;
+
+public class MarkovDictionary : IEnumerable<KeyValuePair<MarkovKey, List<string>>>
 {
-    public class MarkovDictionary : IEnumerable<KeyValuePair<MarkovKey, List<string>>>
+    private const string Eos = "__END_OF_SENTENCE__";
+
+    private readonly Dictionary<MarkovKey, List<string>> _innerDictionary = new();
+
+    private static readonly MarkovKey s_startKey = new();
+
+    public void AddSentence(params string[] words)
     {
-        private const string Eos = "__END_OF_SENTENCE__";
+        var key = s_startKey;
 
-        private readonly Random _random = new Random();
-        private readonly Dictionary<MarkovKey, List<string>> _innerDictionary = new Dictionary<MarkovKey, List<string>>();
-
-        private static readonly MarkovKey _startKey = new MarkovKey();
-
-        public void AddSentence(string[] words)
+        foreach (var word in words)
         {
-            var key = _startKey;
+            _innerDictionary.AddOrGetExisting(key).Add(word);
 
-            foreach (var word in words)
-            {
-                _innerDictionary.AddOrGetExisting(key).Add(word);
-
-                key = key.Push(word);
-            }
-
-            _innerDictionary.AddOrGetExisting(key).Add(Eos);
+            key = key.Push(word);
         }
 
-        public IList<string> BuildSentence()
-        {
-            var result = new List<string>();
-
-            var key = _startKey;
-
-            while (true)
-            {
-                var list = _innerDictionary[key];
-
-                var word = list[_random.Next(list.Count)];
-
-                if (word == Eos)
-                {
-                    break;
-                }
-
-                result.Add(word);
-
-                key = key.Push(word);
-            }
-
-            return result;
-        }
-
-        public IEnumerator<KeyValuePair<MarkovKey, List<string>>> GetEnumerator()
-        {
-            return _innerDictionary.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        _innerDictionary.AddOrGetExisting(key).Add(Eos);
     }
+
+    public IReadOnlyList<string> BuildSentence()
+    {
+        var result = new List<string>();
+
+        var key = s_startKey;
+
+        while (true)
+        {
+            var list = _innerDictionary[key];
+
+            var word = list[Random.Shared.Next(list.Count)];
+
+            if (word == Eos)
+            {
+                break;
+            }
+
+            result.Add(word);
+
+            key = key.Push(word);
+        }
+
+        return result;
+    }
+
+    public IEnumerator<KeyValuePair<MarkovKey, List<string>>> GetEnumerator() => _innerDictionary.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

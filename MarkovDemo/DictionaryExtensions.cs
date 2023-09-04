@@ -1,21 +1,16 @@
-﻿using System.Collections.Generic;
+﻿namespace MarkovDemo;
 
-namespace MarkovDemo
+public static class DictionaryExtensions
 {
-    public static class DictionaryExtensions
+    public static TValue AddOrGetExisting<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key) where TValue : new() where TKey : notnull
     {
-        public static TValue AddOrGetExisting<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key) where TValue : new()
+        if (!dictionary.TryGetValue(key, out var value))
         {
-            TValue value;
+            value = new TValue();
 
-            if (!dictionary.TryGetValue(key, out value))
-            {
-                value = new TValue();
-
-                dictionary.Add(key, value);
-            }
-
-            return value;
+            dictionary.Add(key, value);
         }
+
+        return value;
     }
 }
